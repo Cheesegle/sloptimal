@@ -2,146 +2,69 @@
   <img width="500" alt="osu! logo" src="assets/lazer.png">
 </p>
 
-# osu!
+# sloptimal
 
-[![Build status](https://github.com/ppy/osu/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/ppy/osu/actions/workflows/ci.yml)
-[![GitHub release](https://img.shields.io/github/release/ppy/osu.svg)](https://github.com/ppy/osu/releases/latest)
-[![CodeFactor](https://www.codefactor.io/repository/github/ppy/osu/badge)](https://www.codefactor.io/repository/github/ppy/osu)
-[![dev chat](https://discordapp.com/api/guilds/188630481301012481/widget.png?style=shield)](https://discord.gg/ppy)
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/osu-web/localized.svg)](https://crowdin.com/project/osu-web)
+**sloptimal is an unofficial, experimental fork of [osu!lazer](https://github.com/ppy/osu).** It adds deterministic aim-flow guidance to the osu! beatmap editor. It is not an official osu! release and is not affiliated with or endorsed by ppy.
 
-A free-to-win rhythm game. Rhythm is just a *click* away!
+## Aim-flow editor tools
 
-This is the future – and final – iteration of the [osu!](https://osu.ppy.sh) game client which marks the beginning of an open era! Currently known by and released under the release codename "*lazer*". As in sharper than cutting-edge.
+While placing a hit circle, the editor can show:
 
-## Status
+- A placement heatmap ranking possible positions from recent cursor flow, timing, spacing, turn continuity, and motion cost.
+- A raw `0–100` score when hovering a heatmap cell. Scores are heuristic rankings, not probabilities.
+- One optional main cursor ribbon through recent hit positions and the native circle placement preview.
+- **Rhythm / BPM correction** for maps whose apparent cadence is half or double the intended rhythm.
+- **Aim velocity / spacing** to tighten or widen the preferred placement distance independently.
+- Deterministic **Minimum jerk**, **1€ smoothed**, and **Arm + wrist** motion models.
 
-This project is under constant development, but we do our best to keep things in a stable state. Players are encouraged to install from a release alongside their stable *osu!* client. This project will continue to evolve until we eventually reach the point where most users prefer it over the previous "osu!stable" release.
+The tool uses no machine learning. It does not create predicted-circle points, synthetic circle markers, hover-generated continuation ribbons, or other ghost previews.
 
-A few resources are available as starting points to getting involved and understanding the project:
+See [AIM_FLOW_PREVIEW.md](AIM_FLOW_PREVIEW.md) for the scoring model, controls, calibration data, performance details, and research references.
 
-- Detailed release changelogs are available on the [official osu! site](https://osu.ppy.sh/home/changelog/lazer).
-- You can learn more about our approach to [project management](https://github.com/ppy/osu/wiki/Project-management).
-- Track our current efforts [towards improving the game](https://github.com/orgs/ppy/projects/7/views/6).
+## Using it
 
-## Running osu!
+With a packaged Windows version:
 
-If you are just looking to give the game a whirl, you can grab the latest release for your platform:
+1. Extract the archive if necessary.
+2. Start it with `launch-aim-flow.cmd`. The launcher prevents the official updater from replacing the custom portable build.
+3. Open a beatmap in the editor and select the hit-circle placement tool.
+4. Expand the right-side **aim flow** toolbox.
+5. Enable **Placement heatmap**, then adjust the rhythm, spacing, and motion-model controls as needed.
+6. Optionally enable **Main cursor ribbon**.
 
-### Latest release:
+Guidance appears when a circle is being previewed and at least two earlier cursor waypoints establish an incoming flow.
 
-| [Windows 10+ (x64)](https://github.com/ppy/osu/releases/latest/download/install.exe) | macOS 12+ ([Intel](https://github.com/ppy/osu/releases/latest/download/osu.app.Intel.zip), [Apple Silicon](https://github.com/ppy/osu/releases/latest/download/osu.app.Apple.Silicon.zip)) | [Linux (x64)](https://github.com/ppy/osu/releases/latest/download/osu.AppImage) | [iOS 13.4+](https://osu.ppy.sh/home/testflight) | [Android 5+](https://github.com/ppy/osu/releases/latest/download/sh.ppy.osulazer.apk) |
-|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ------------- | ------------- | ------------- |
+## Building from source
 
-You can also generally download a version for your current device from the [osu! site](https://osu.ppy.sh/home/download).
-
-If your platform is unsupported or not listed above, there is still a chance you can run the release or manually build it by following the instructions below.
-
-**For iOS/iPadOS users**: The iOS testflight link fills up very fast (Apple has a hard limit of 10,000 users). We reset it occasionally. Please do not ask about this. Check back regularly for link resets or follow [peppy](https://twitter.com/ppy) on twitter for announcements. Our goal is to get the game on mobile app stores very soon so we don't have to live with this limitation.
-
-## Developing a custom ruleset
-
-osu! is designed to allow user-created gameplay variations, called "rulesets". Building one of these allows a developer to harness the power of the osu! beatmap library, game engine, and general UX for a new style of gameplay. To get started working on a ruleset, we have some templates available [here](https://github.com/ppy/osu/tree/master/Templates).
-
-You can see some examples of custom rulesets by visiting the [custom ruleset directory](https://github.com/ppy/osu/discussions/13096).
-
-## Developing osu!
-
-### Prerequisites
-
-Please make sure you have the following prerequisites:
-
-- A desktop platform with the [.NET 8.0 SDK](https://dotnet.microsoft.com/download) installed.
-
-When working with the codebase, we recommend using an IDE with intelligent code completion and syntax highlighting, such as the latest version of [Visual Studio](https://visualstudio.microsoft.com/vs/), [JetBrains Rider](https://www.jetbrains.com/rider/), or [Visual Studio Code](https://code.visualstudio.com/) with the [EditorConfig](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) and [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) plugin installed.
-
-### Downloading the source code
-
-Clone the repository:
+Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). While the feature PR is pending, clone its branch directly:
 
 ```shell
-git clone https://github.com/ppy/osu
-cd osu
+git clone --branch agent/aim-flow-heatmap --single-branch https://github.com/Cheesegle/sloptimal.git
+cd sloptimal
+dotnet run --project ./osu.Desktop/osu.Desktop.csproj -c Release
 ```
 
-To update the source code to the latest commit, run the following command inside the `osu` directory:
+The active changes are tracked in [draft PR #1](https://github.com/Cheesegle/sloptimal/pull/1). Once they are merged, a normal clone of the default branch is sufficient.
+
+To create a self-contained Windows x64 package:
+
+```powershell
+dotnet publish .\osu.Desktop\osu.Desktop.csproj -c Release -r win-x64 --self-contained true -o .\publish\win-x64
+Copy-Item .\launch-aim-flow.cmd, .\AIM_FLOW_PREVIEW.md, .\LICENCE .\publish\win-x64\
+```
+
+## Tests
+
+Run the focused aim-flow and editor suite with:
 
 ```shell
-git pull
+dotnet test osu.Game.Rulesets.Osu.Tests/osu.Game.Rulesets.Osu.Tests.csproj -c Release --filter "FullyQualifiedName~AimFlowAnalysisTest|FullyQualifiedName~osu.Game.Rulesets.Osu.Tests.Editor.TestSceneOsuEditor"
 ```
 
-### Building
+The current implementation passes all 46 focused tests.
 
-#### From an IDE
+## Upstream and licence
 
-You should load the solution via one of the platform-specific `.slnf` files, rather than the main `.sln`. This will reduce dependencies and hide platforms that you don't care about. Valid `.slnf` files are:
+This project is based on [ppy/osu](https://github.com/ppy/osu) and retains its MIT licence. See [LICENCE](LICENCE) for the copyright and licence terms.
 
-- `osu.Desktop.slnf` (most common)
-- `osu.Android.slnf`
-- `osu.iOS.slnf`
-
-Run configurations for the recommended IDEs (listed above) are included. You should use the provided Build/Run functionality of your IDE to get things going. When testing or building new components, it's highly encouraged you use the `osu! (Tests)` project/configuration. More information on this is provided [below](#contributing).
-
-To build for mobile platforms, you will likely need to run `sudo dotnet workload restore` if you haven't done so previously. This will install Android/iOS tooling required to complete the build.
-
-#### From CLI
-
-You can also build and run *osu!* from the command-line with a single command:
-
-```shell
-dotnet run --project osu.Desktop
-```
-
-When running locally to do any kind of performance testing, make sure to add `-c Release` to the build command, as the overhead of running with the default `Debug` configuration can be large (especially when testing with local framework modifications as below).
-
-If the build fails, try to restore NuGet packages with `dotnet restore`.
-
-### Testing with resource/framework modifications
-
-Sometimes it may be necessary to cross-test changes in [osu-resources](https://github.com/ppy/osu-resources) or [osu-framework](https://github.com/ppy/osu-framework). This can be quickly achieved using included commands:
-
-Windows:
-
-```ps
-UseLocalFramework.ps1
-UseLocalResources.ps1
-```
-
-macOS / Linux:
-
-```ps
-UseLocalFramework.sh
-UseLocalResources.sh
-```
-
-Note that these commands assume you have the relevant project(s) checked out in adjacent directories:
-
-```
-|- osu            // this repository
-|- osu-framework
-|- osu-resources
-```
-
-### Code analysis
-
-Before committing your code, please run a code formatter. This can be achieved by running `dotnet format` in the command line, or using the `Format code` command in your IDE.
-
-We have adopted some cross-platform, compiler integrated analyzers. They can provide warnings when you are editing, building inside IDE or from command line, as-if they are provided by the compiler itself.
-
-JetBrains ReSharper InspectCode is also used for wider rule sets. You can run it from PowerShell with `.\InspectCode.ps1`. Alternatively, you can install ReSharper or use Rider to get inline support in your IDE of choice.
-
-## Contributing
-
-When it comes to contributing to the project, the two main things you can do to help out are reporting issues and submitting pull requests. Please refer to the [contributing guidelines](CONTRIBUTING.md) to understand how to help in the most effective way possible.
-
-If you wish to help with localisation efforts, head over to [crowdin](https://crowdin.com/project/osu-web).
-
-Our team believes in **human contributions**. Any contribution – be it an issue report or a pull request – which is created by, documented by, or aided by AI/LLM usage will typically be **closed and locked without further discussion**.
-
-## Licence
-
-*osu!*'s code and framework are licensed under the [MIT licence](https://opensource.org/licenses/MIT). Please see [the licence file](LICENCE) for more information. [tl;dr](https://tldrlegal.com/license/mit-license) you can do whatever you want as long as you include the original copyright and license notice in any copy of the software/source.
-
-Please note that this *does not cover* the usage of the "osu!" or "ppy" branding in any software, resources, advertising or promotion, as this is protected by trademark law.
-
-Please also note that game resources are covered by a separate licence. Please see the [ppy/osu-resources](https://github.com/ppy/osu-resources) repository for clarifications.
+The licence does not grant rights to the osu! or ppy trademarks. Game resources may have separate terms; see [ppy/osu-resources](https://github.com/ppy/osu-resources) for details.
