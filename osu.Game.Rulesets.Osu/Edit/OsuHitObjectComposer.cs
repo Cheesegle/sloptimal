@@ -26,6 +26,8 @@ using osu.Game.Rulesets.Edit.Tools;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Objects.Types;
+using osu.Game.Rulesets.Osu.Configuration;
+using osu.Game.Rulesets.Osu.Edit.AimFlow;
 using osu.Game.Rulesets.Osu.Objects;
 using osu.Game.Rulesets.Osu.UI;
 using osu.Game.Rulesets.UI;
@@ -85,9 +87,14 @@ namespace osu.Game.Rulesets.Osu.Edit
         [Cached]
         protected readonly FreehandSliderToolboxGroup FreehandSliderToolboxGroup = new FreehandSliderToolboxGroup();
 
+        [Cached]
+        private readonly AimFlowToolboxGroup aimFlowToolboxGroup = new AimFlowToolboxGroup();
+
         [BackgroundDependencyLoader]
         private void load()
         {
+            aimFlowToolboxGroup.BindConfig((OsuRulesetConfigManager)Config);
+
             AddInternal(DistanceSnapProvider);
             DistanceSnapProvider.AttachToToolbox(RightToolbox);
 
@@ -100,6 +107,7 @@ namespace osu.Game.Rulesets.Osu.Edit
                     RelativeSizeAxes = Axes.Both
                 }
             );
+            LayerBelowRuleset.Add(new AimFlowOverlay(aimFlowToolboxGroup));
 
             selectedHitObjects = EditorBeatmap.SelectedHitObjects.GetBoundCopy();
             selectedHitObjects.CollectionChanged += (_, _) => updateDistanceSnapGrid();
@@ -121,6 +129,7 @@ namespace osu.Game.Rulesets.Osu.Edit
                         AutoSizeAxes = Axes.Y,
                         Child = sliderVelocityToolboxGroup,
                     },
+                    aimFlowToolboxGroup,
                     OsuGridToolboxGroup,
                     new TransformToolboxGroup
                     {

@@ -3,6 +3,7 @@
 
 using osu.Game.Configuration;
 using osu.Game.Rulesets.Configuration;
+using osu.Game.Rulesets.Osu.Edit.AimFlow;
 using osu.Game.Rulesets.UI;
 
 namespace osu.Game.Rulesets.Osu.Configuration
@@ -23,6 +24,14 @@ namespace osu.Game.Rulesets.Osu.Configuration
             SetDefault(OsuRulesetSetting.ShowCursorRipples, false);
             SetDefault(OsuRulesetSetting.PlayfieldBorderStyle, PlayfieldBorderStyle.None);
 
+            SetDefault(OsuRulesetSetting.EditorAimFlowPreviewEnabled, false);
+            SetDefault(OsuRulesetSetting.EditorAimFlowHeatmapEnabled, false);
+            SetDefault(OsuRulesetSetting.EditorAimFlowModel, AimFlowModel.MinimumJerk);
+            SetDefault(OsuRulesetSetting.EditorAimFlowOneEuroMinCutoff, 1.0f);
+            SetDefault(OsuRulesetSetting.EditorAimFlowOneEuroBeta, 0.004f);
+            SetDefault(OsuRulesetSetting.EditorAimFlowRhythmMultiplier, 1.0f);
+            SetDefault(OsuRulesetSetting.EditorAimFlowSpacingMultiplier, 1.0f);
+
             SetDefault(OsuRulesetSetting.ReplayClickMarkersEnabled, false);
             SetDefault(OsuRulesetSetting.ReplayFrameMarkersEnabled, false);
             SetDefault(OsuRulesetSetting.ReplayCursorPathEnabled, false);
@@ -38,6 +47,15 @@ namespace osu.Game.Rulesets.Osu.Configuration
         ShowCursorTrail,
         ShowCursorRipples,
         PlayfieldBorderStyle,
+
+        // Editor.
+        EditorAimFlowPreviewEnabled,
+        EditorAimFlowHeatmapEnabled,
+        EditorAimFlowModel,
+        EditorAimFlowOneEuroMinCutoff,
+        EditorAimFlowOneEuroBeta,
+        EditorAimFlowRhythmMultiplier,
+        EditorAimFlowSpacingMultiplier,
 
         // Replay
         ReplayClickMarkersEnabled,
