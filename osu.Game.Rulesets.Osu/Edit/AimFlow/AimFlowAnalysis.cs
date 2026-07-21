@@ -60,8 +60,8 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
         }
 
         /// <summary>
-        /// Ranks alternative positions for the circle currently being placed. Unlike <see cref="Analyse"/>,
-        /// the placement position is only used to draw the live incoming trajectory; candidate positions are
+        /// Ranks alternative positions for the object anchor currently being placed or repositioned. Unlike <see cref="Analyse"/>,
+        /// the target position is only used to draw the live incoming trajectory; candidate positions are
         /// derived exclusively from committed history and the placement time.
         /// </summary>
         public static AimFlowPlacementResult AnalysePlacement(
@@ -91,7 +91,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
 
             if (placementDuration <= 1.01)
             {
-                // Same-time objects after a slider tail have only one physically valid current location.
+                // Same-time targets after a slider tail have only one physically valid current location.
                 // The overlay records that tail one millisecond earlier to keep waypoint times strictly ordered.
                 suggestions = new List<AimFlowSuggestion>
                 {
@@ -286,7 +286,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
         }
 
         /// <summary>
-        /// Samples the full playfield placement objective for a current-circle quality heatmap.
+        /// Samples the full playfield placement objective for a target-object anchor quality heatmap.
         /// </summary>
         public static AimFlowHeatmap CreatePlacementHeatmap(
             IReadOnlyList<AimWaypoint> inputHistory,
@@ -311,7 +311,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
 
             if (!exactTailAnchor)
             {
-                // Rhythm is a cadence correction for the geometric spacing prior only. The current circle's
+                // Rhythm is a cadence correction for the geometric spacing prior only. The target object's
                 // real timestamp remains authoritative for velocity, minimum-jerk, and arm-motion costs.
                 preferredDistance = Math.Clamp(
                     preferredDistance * normaliseMultiplier(spacingMultiplier, 0.5f, 2)

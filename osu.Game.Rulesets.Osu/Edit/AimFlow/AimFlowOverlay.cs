@@ -54,6 +54,12 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
 
         public bool HeatmapScoreVisible => hoverScoreText.Alpha > 0.9f;
 
+        internal OsuHitObject? CurrentTarget { get; private set; }
+
+        internal bool CurrentTargetIsSelection { get; private set; }
+
+        internal AimFlowHeatmap CurrentHeatmap => currentHeatmap;
+
         public AimFlowOverlay(AimFlowToolboxGroup settings)
         {
             this.settings = settings;
@@ -109,22 +115,25 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
             bool showPreview = settings.Enabled.Value;
             bool showHeatmap = settings.HeatmapEnabled.Value;
 
-            if ((!showPreview && !showHeatmap) || editorBeatmap.PlacementObject.Value is not HitCircle placementCircle)
+            if ((!showPreview && !showHeatmap) || !tryGetTarget(out OsuHitObject target, out bool targetIsSelection))
             {
                 hideEverything();
                 return;
             }
 
-            List<AimWaypoint> history = collectHistory(placementCircle);
+            CurrentTarget = target;
+            CurrentTargetIsSelection = targetIsSelection;
+            Vector2 targetPosition = target.StackedPosition;
+            List<AimWaypoint> history = collectHistory(target.StartTime);
 
-            if (history.Count < 2 || placementCircle.StartTime <= history[^1].Time + 0.01)
+            if (history.Count < 2 || target.StartTime <= history[^1].Time + 0.01)
             {
                 hideEverything();
                 return;
             }
 
-            int newAnalysisHash = calculateAnalysisStateHash(history, placementCircle.StartTime);
-            placementDuration = Math.Max(1, placementCircle.StartTime - history[^1].Time);
+            int newAnalysisHash = calculateAnalysisStateHash(history, target.StartTime);
+            placementDuration = Math.Max(1, target.StartTime - history[^1].Time);
 
             if (showHeatmap)
             {
@@ -132,7 +141,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
                 {
                     currentHeatmap = AimFlowAnalysis.CreatePlacementHeatmap(
                         history,
-                        placementCircle.StartTime,
+                        target.StartTime,
                         settings.Model.Value,
                         OsuPlayfield.BASE_SIZE,
                         spacingMultiplier: settings.SpacingMultiplier.Value,
@@ -155,13 +164,13 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
 
             if (showPreview)
             {
-                int newTrajectoryHash = calculateTrajectoryStateHash(newAnalysisHash, placementCircle.Position);
+                int newTrajectoryHash = calculateTrajectoryStateHash(newAnalysisHash, targetPosition);
 
                 if (!hasTrajectoryState || trajectoryStateHash != newTrajectoryHash)
                 {
                     var trajectoryWaypoints = new List<AimWaypoint>(history)
                     {
-                        new AimWaypoint(placementCircle.Position, placementCircle.StartTime),
+                        new AimWaypoint(targetPosition, target.StartTime),
                     };
                     TrajectoryResult trajectory = AimFlowAnalysis.GenerateTrajectory(
                         trajectoryWaypoints,
@@ -182,8 +191,45 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
             else
                 hideLivePreview();
 
-            updateStatus(showHeatmap);
+            updateStatus(showHeatmap, target, targetIsSelection);
             this.FadeIn(100);
+        }
+
+        private bool tryGetTarget(out OsuHitObject target, out bool targetIsSelection)
+        {
+            HitObject? placementObject = editorBeatmap.PlacementObject.Value;
+
+            // Never fall back to selection while an unsupported placement (such as a spinner) is active.
+            if (placementObject != null)
+            {
+                if (placementObject is HitCircle or Slider)
+                {
+                    target = (OsuHitObject)placementObject;
+                    targetIsSelection = false;
+                    return true;
+                }
+
+                target = null!;
+                targetIsSelection = false;
+                return false;
+            }
+
+            OsuHitObject? earliestSelectedTarget = null;
+
+            foreach (HitObject selectedObject in editorBeatmap.SelectedHitObjects)
+            {
+                if (selectedObject is not HitCircle && selectedObject is not Slider)
+                    continue;
+
+                var candidate = (OsuHitObject)selectedObject;
+
+                if (earliestSelectedTarget == null || candidate.StartTime < earliestSelectedTarget.StartTime)
+                    earliestSelectedTarget = candidate;
+            }
+
+            target = earliestSelectedTarget!;
+            targetIsSelection = earliestSelectedTarget != null;
+            return earliestSelectedTarget != null;
         }
 
         private void updateHoveredHeatmap()
@@ -234,7 +280,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
             hoverScoreText.FadeIn(80);
         }
 
-        private void updateStatus(bool showHeatmap)
+        private void updateStatus(bool showHeatmap, OsuHitObject target, bool targetIsSelection)
         {
             string modelName = settings.Model.Value switch
             {
@@ -244,18 +290,20 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
             };
             string multipliers = $"rhythm {settings.RhythmMultiplier.Value:0.##}× • spacing {settings.SpacingMultiplier.Value:0.##}×";
             string ribbonSuffix = settings.Enabled.Value ? " • main ribbon" : string.Empty;
+            string targetName = target is Slider ? "slider head" : "circle";
+            string targetContext = targetIsSelection ? $"selected {targetName}" : $"placing {targetName}";
 
             if (hoveredHeatmapScore.HasValue)
-                statusText.Text = $"aim flow • cell score {hoveredHeatmapScore.Value:0.0} • {multipliers}{ribbonSuffix}";
+                statusText.Text = $"aim flow • {targetContext} • cell score {hoveredHeatmapScore.Value:0.0} • {multipliers}{ribbonSuffix}";
             else if (showHeatmap)
-                statusText.Text = $"aim flow • {modelName} • current {placementDuration:0} ms • hover heatmap for score • {multipliers}{ribbonSuffix}";
+                statusText.Text = $"aim flow • {modelName} • {targetContext} • incoming {placementDuration:0} ms • hover heatmap for score • {multipliers}{ribbonSuffix}";
             else
-                statusText.Text = $"aim flow • {modelName} • current {placementDuration:0} ms • {multipliers}{ribbonSuffix}";
+                statusText.Text = $"aim flow • {modelName} • {targetContext} • incoming {placementDuration:0} ms • {multipliers}{ribbonSuffix}";
 
             statusText.FadeIn(100);
         }
 
-        private List<AimWaypoint> collectHistory(HitCircle placementCircle)
+        private List<AimWaypoint> collectHistory(double targetTime)
         {
             var result = new List<AimWaypoint>();
 
@@ -268,7 +316,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
             {
                 int middle = (lower + upper) / 2;
 
-                if (editorBeatmap.HitObjects[middle].StartTime < placementCircle.StartTime)
+                if (editorBeatmap.HitObjects[middle].StartTime < targetTime)
                     lower = middle + 1;
                 else
                     upper = middle;
@@ -284,7 +332,7 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
                     break;
                 }
 
-                if (hitObject.GetEndTime() > placementCircle.StartTime + 0.01)
+                if (hitObject.GetEndTime() > targetTime + 0.01)
                     continue;
 
                 if (hitObject is Slider slider)
@@ -299,16 +347,16 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
                         double progress = sample / (double)sampleCount;
                         double sampleTime = slider.StartTime + slider.Duration * progress;
 
-                        if (Math.Abs(sampleTime - placementCircle.StartTime) <= 0.01)
+                        if (Math.Abs(sampleTime - targetTime) <= 0.01)
                         {
                             // A slider tail at this exact timestamp is the cursor's zero-time anchor for the
-                            // current circle. Keep it one millisecond earlier so trajectory interpolation can
+                            // current target. Keep it one millisecond earlier so trajectory interpolation can
                             // represent the constraint without collapsing two same-time waypoints.
-                            result.Add(new AimWaypoint(slider.StackedPositionAt(progress), placementCircle.StartTime - 1));
+                            result.Add(new AimWaypoint(slider.StackedPositionAt(progress), targetTime - 1));
                             continue;
                         }
 
-                        if (sampleTime > placementCircle.StartTime)
+                        if (sampleTime > targetTime)
                             continue;
 
                         result.Add(new AimWaypoint(
@@ -349,6 +397,8 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
 
         private void hideEverything()
         {
+            CurrentTarget = null;
+            CurrentTargetIsSelection = false;
             hideLivePreview();
             clearHeatmapHover();
             heatmap.FadeOut(100);

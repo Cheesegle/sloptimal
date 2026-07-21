@@ -78,13 +78,13 @@ namespace osu.Game.Rulesets.Osu.Edit.AimFlow
                 new SettingsCheckbox
                 {
                     LabelText = "Main cursor ribbon",
-                    TooltipText = "Show only the timing-aware main ribbon leading to the circle currently being placed.",
+                    TooltipText = "Show the timing-aware main ribbon leading to the circle, slider head, or earliest selected aim object.",
                     Current = Enabled,
                 },
                 new SettingsCheckbox
                 {
                     LabelText = "Placement heatmap",
-                    TooltipText = "Colour the playfield by placement quality. Hover a cell to see its numeric score.",
+                    TooltipText = "Score placement for the active circle/slider head or earliest selected aim object. Hover a cell for its number.",
                     Current = HeatmapEnabled,
                 },
                 rhythmSlider = new ExpandableSlider<float>
