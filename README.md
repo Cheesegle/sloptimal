@@ -8,11 +8,11 @@
 
 ## Aim-flow editor tools
 
-While placing a hit circle, the editor can show:
+While placing a hit circle or slider, or repositioning an existing selection, the editor can show:
 
-- A placement heatmap ranking possible positions from recent cursor flow, timing, spacing, turn continuity, and motion cost.
+- A placement heatmap ranking possible object-anchor positions from recent cursor flow, timing, spacing, turn continuity, and motion cost.
 - A raw `0–100` score when hovering a heatmap cell. Scores are heuristic rankings, not probabilities.
-- One optional main cursor ribbon through recent hit positions and the native circle placement preview.
+- One optional main cursor ribbon through recent hit positions and the active circle, slider head, or selection anchor.
 - **Rhythm / BPM correction** for maps whose apparent cadence is half or double the intended rhythm.
 - **Aim velocity / spacing** to tighten or widen the preferred placement distance independently.
 - Deterministic **Minimum jerk**, **1€ smoothed**, and **Arm + wrist** motion models.
@@ -27,12 +27,12 @@ With a packaged Windows version:
 
 1. Extract the archive if necessary.
 2. Start it with `launch-aim-flow.cmd`. The launcher prevents the official updater from replacing the custom portable build.
-3. Open a beatmap in the editor and select the hit-circle placement tool.
+3. Open a beatmap in the editor and begin placing a hit circle or slider, or select existing objects to reposition.
 4. Expand the right-side **aim flow** toolbox.
 5. Enable **Placement heatmap**, then adjust the rhythm, spacing, and motion-model controls as needed.
 6. Optionally enable **Main cursor ribbon**.
 
-Guidance appears when a circle is being previewed and at least two earlier cursor waypoints establish an incoming flow.
+Guidance appears when the active target has at least two earlier cursor waypoints establishing an incoming flow. Sliders are scored at their head; their path shape is not changed. For a multi-object selection, the earliest selected circle or slider is the group anchor.
 
 ## Building from source
 
@@ -61,7 +61,7 @@ Run the focused aim-flow and editor suite with:
 dotnet test osu.Game.Rulesets.Osu.Tests/osu.Game.Rulesets.Osu.Tests.csproj -c Release --filter "FullyQualifiedName~AimFlowAnalysisTest|FullyQualifiedName~osu.Game.Rulesets.Osu.Tests.Editor.TestSceneOsuEditor"
 ```
 
-The current implementation passes all 46 focused tests.
+The current implementation passes all 47 focused tests.
 
 ## Upstream and licence
 
